@@ -67,6 +67,15 @@ def read_screen_names(filename):
     ['DrJillStein', 'GovGaryJohnson', 'HillaryClinton', 'realDonaldTrump']
     """
     ###TODO
+    lst=[]
+    with open(filename,"r") as my_file:
+        for item in my_file :
+            splt_arr=item.split()
+            stn_final=(splt_arr[0].rstrip('\n'))
+            lst.append(stn_final)
+            
+        return lst
+            
     pass
 
 
@@ -113,6 +122,11 @@ def get_users(twitter, screen_names):
     [6253282, 783214]
     """
     ###TODO
+    dic = {'screen_name':screen_names}
+    request = robust_request(twitter,'users/lookup',dic,5)
+    users = [items for items in request]
+    return users
+    pass
     pass
 
 
@@ -138,6 +152,11 @@ def get_friends(twitter, screen_name):
     [695023, 1697081, 8381682, 10204352, 11669522]
     """
     ###TODO
+     f_list=[]
+    request=robust_request(twitter,'friends/ids',{'screen_name':screen_name,'count':5000})
+    friends = [items for items in request]
+    return friends.sort()
+
     pass
 
 
@@ -160,6 +179,7 @@ def add_all_friends(twitter, users):
     [695023, 1697081, 8381682, 10204352, 11669522]
     """
     ###TODO
+    return {n: get_friends(n) for n in users}
     pass
 
 
@@ -172,6 +192,10 @@ def print_num_friends(users):
         Nothing
     """
     ###TODO
+    candidate2friends = add_all_friends(c[0] for c in candidates)
+     for itr in sorted(candidate2friends):
+        print ("%s %s" % (itr,len(candidate2friends[itr])))
+    print(print_num_friends(candidate2friends))  
     pass
 
 
@@ -189,6 +213,15 @@ def count_friends(users):
     [(2, 3), (3, 2), (1, 1)]
     """
     ###TODO
+    count_item = Counter()
+    for iter1 in candidate2friends:
+        for iter2 in candidate2friends[iter1]:
+            count_item[iter2]+=1
+    return count_item
+    
+    
+    friend_counts = count_friends(candidate2friends)
+    print (friend_counts.most_common(5))
     pass
 
 
@@ -214,6 +247,7 @@ def friend_overlap(users):
     [('a', 'c', 3), ('a', 'b', 2), ('b', 'c', 2)]
     """
     ###TODO
+    
     pass
 
 
@@ -251,6 +285,22 @@ def create_graph(users, friend_counts):
       A networkx Graph
     """
     ###TODO
+     grph = nx.DiGraph()
+    for item in users:
+        grph.add_node(item)
+        for itr in users[item]:
+            if friend_counts[itr]>1:
+                grph.add_node(itr)
+    
+    for item in users:
+        for itr in users[item]:
+            if(friend_counts[itr]>1):
+                grph.add_edge(item,itr)
+    return grph
+    
+    
+graph = create_graph(users, friend_counts)
+print('graph has %s nodes and %s edges' % (len(graph.nodes()), len(graph.edges())))
     pass
 
 
@@ -265,6 +315,15 @@ def draw_network(graph, users, filename):
     make it look presentable.
     """
     ###TODO
+    labels = {n: n if n in users or friend_counts[n] > 3 else '' for n in graph.nodes()}
+    plt.figure(figsize=(12,12))
+    nx.draw_networkx(graph, node_color=colors,
+                     labels=labels, alpha=.5, width=.1,
+                     node_size=100)
+    plt.axis("off")
+    plt.show()
+    
+    draw_network(graph, users, friend_counts)
     pass
 
 
