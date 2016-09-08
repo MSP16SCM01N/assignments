@@ -8,6 +8,8 @@ Jill Stein and Gary Johnson are more similar than Hillary Clinton and Donald
 Trump.
 
 How is this approach misleading? How might you fix it?
+For this approach, we don’t know totally numbers of  friends they have. Therefore, compare result of this two numbers
+couldn’t make sense of their similarity. For this situation, we can choose same numbers of friends for each user,and find the common friends’ number.
 
 
 
@@ -22,6 +24,7 @@ How is this approach misleading? How might you fix it?
 do you think this user is followed by both Hilary Clinton and Donald Trump,
 who are rivals? Do some web searches to see if you can find out more
 information.
+Because this user is common friend to Hilary Clinton and Donald Trump.
 
 
 
@@ -39,7 +42,7 @@ information.
 Johnson follows over 3K accounts, while Donald Trump follows less than
 50). Why do you think this is? How might that affect our analysis?
 
-
+Counting follower numbers on Twitter does not mean much unless it’s attacked  to other stats about how influential you are on Twitter. I think most pf these influence measures take into consideration factors that include follow count,but also go far beyond it. For example, if you have more than 1k followers, but everyone ignore your twitter and no one reply you. While someone just have 10 followers, but they are retweeted each other everyday. Thus, followers number would not really affect analysis.
 
 
 
@@ -55,3 +58,5 @@ https://dev.twitter.com/rest/reference/get/friends/ids, how many requests will
 we have to make? Given how Twitter does rate limiting
 (https://dev.twitter.com/rest/public/rate-limiting), approximately how many
 minutes will it take to collect this data?
+There are 2 request we should make.
+we need approximate 15 minutes for collecting this data.
