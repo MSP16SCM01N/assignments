@@ -51,8 +51,13 @@ def tokenize(movies):
     >>> movies['tokens'].tolist()
     [['horror', 'romance'], ['sci-fi']]
     """
-    ###TODO
-    pass
+    new_column = movies.genres.tolist()
+    tokens = []
+    for n in new_column:
+        tokens.append(tokenize_string(n))
+    movies['tokens']= pd.Series(tokens)
+    return movies 
+
 
 
 def featurize(movies):
@@ -77,8 +82,44 @@ def featurize(movies):
       - The movies DataFrame, which has been modified to include a column named 'features'.
       - The vocab, a dict from term to int. Make sure the vocab is sorted alphabetically as in a2 (e.g., {'aardvark': 0, 'boy': 1, ...})
     """
-    ###TODO
-    pass
+    N_dos = movies.shape[0]  #  totally number of docs
+    terms = set() # num of docs that mention term i
+    tokens = movies['tokens'].tolist()
+    for token in tokens:
+        terms = terms | set(token)
+    terms = sorted(terms)
+    #TF-IDF score
+    #IDF = logN/n
+    df = {}
+    vocab = {}
+    for i in range(len(terms)):
+        vocab[terms[i]] = i
+        for token in tokens:
+            if terms[i] in token:
+                if terms[i] in df.values():
+                    df[terms] = df[terms[i]] + 1
+                else:
+                    df[terms[i]] = 1
+    # TF 
+    tf = {}
+    features = []
+    for token in tokens:
+        for j in token:
+            tf[j] = j.count(j)/len(j)
+        maxtf = max(tf.values())
+        col = []
+        data = []
+        row = []
+        for t in token:
+            row.append(0)
+            col.append(vocab[t])
+            data.append(tf[t]/maxtf*math.log(N_dos/df[t],10))
+        f = csr_matrix((data,(row,col)),shape = (1,len(terms)))
+        features.append(f)
+    movies['features'] = pd.Series(features)
+    return movies,vocab 
+
+ 
 
 
 def train_test_split(ratings):
@@ -102,8 +143,10 @@ def cosine_sim(a, b):
       The cosine similarity, defined as: dot(a, b) / ||a|| * ||b||
       where ||a|| indicates the Euclidean norm (aka L2 norm) of vector a.
     """
-    ###TODO
-    pass
+    def norm(a):
+        return math.sqrt(a.dot(a.T).sum())
+    return a.dot(b.T).sum()/((norm(a)*norm(b)))
+
 
 
 def make_predictions(movies, ratings_train, ratings_test):
@@ -128,8 +171,39 @@ def make_predictions(movies, ratings_train, ratings_test):
     Returns:
       A numpy array containing one predicted rating for each element of ratings_test.
     """
-    ###TODO
-    pass
+   r = list()
+    for index, row in ratings_test.iterrows():
+        mid = row['movieId']
+        uid = row['userId']
+        #get feature matrix
+        csr_matrix_1 = movies.loc[movies['movieId'] == mid]['features'].iloc[0]
+        box = ratings_train.loc[ratings_train['userId'] == uid]
+        #rating
+        ratedmovies = box['movieId'].tolist()
+        existrate = box['rating'].tolist()
+        # compute silimarity 
+        sim = dict()
+        # movieID's position
+        position = dict()
+        for index, item in enumerate(ratedmovies): 
+            temp = movies.loc[movies['movieId'] == item]
+            csr_matrix_2 = temp['features'].iloc[0]
+            similarity = cosine_sim(csr_matrix_1, csr_matrix_2)
+            #positive cosine similarity
+            if similarity > 0:
+                sim[item] = similarity
+                position[item] = index  
+        # no positive cosine similarity
+        if len(sim) == 0:
+            r.append(np.mean(existrate))
+        else:
+            right = 0.0
+            left = 0.0
+            for k, v in sim.items():
+                left += sim[k] * existrate[position[k]]
+                right += sim[k]
+            r.append(left / right)
+    return np.array(r) 
 
 
 def mean_absolute_error(predictions, ratings_test):
